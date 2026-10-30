@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Google</title>
+<style>
+:root{--bg:#fff;--fg:#202124;--muted:#5f6368;--line:#dfe1e5;--hover:#f8f9fa;--link:#1a0dab;--shadow:0 1px 6px rgba(32,33,36,.28);--btn:#f8f9fa;--btnb:#f8f9fa;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#202124;--fg:#e8eaed;--muted:#9aa0a6;--line:#5f6368;--hover:#303134;--btn:#303134;--btnb:#303134;--shadow:0 1px 6px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#202124;--fg:#e8eaed;--muted:#9aa0a6;--line:#5f6368;--hover:#303134;--btn:#303134;--btnb:#303134;--shadow:0 1px 6px rgba(0,0,0,.6);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--fg);font-family:Arial,Helvetica,sans-serif}
+header{display:flex;justify-content:flex-end;align-items:center;gap:18px;padding:14px 20px;font-size:13px}
+header a{color:var(--fg);text-decoration:none}header a:hover{text-decoration:underline}
+.signin{background:#1a73e8;color:#fff!important;padding:9px 23px;border-radius:4px;font-weight:bold}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16px 12vh}
+.logo{font-family:"Product Sans",Arial,sans-serif;font-size:clamp(56px,16vw,92px);letter-spacing:-3px;margin:0 0 28px;font-weight:500;user-select:none}
+.b{color:#4285f4}.r{color:#ea4335}.y{color:#fbbc05}.g{color:#34a853}
+.box{display:flex;align-items:center;width:100%;max-width:584px;height:46px;border:1px solid var(--line);border-radius:24px;padding:0 16px;background:var(--bg)}
+.box:hover,.box:focus-within{box-shadow:var(--shadow);border-color:transparent}
+.box svg{flex:none;width:20px;height:20px;fill:var(--muted)}
+.box input{flex:1;border:0;outline:0;background:transparent;color:var(--fg);font-size:16px;margin:0 12px;height:100%;min-width:0}
+.btns{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap;justify-content:center}
+.btns button{background:var(--btn);border:1px solid var(--btnb);color:var(--fg);font-size:14px;padding:0 16px;height:36px;border-radius:4px;cursor:pointer}
+.btns button:hover{border-color:var(--line);box-shadow:0 1px 1px rgba(0,0,0,.1)}
+footer{background:var(--hover);color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
+footer div{padding:15px 24px;display:flex;gap:24px;flex-wrap:wrap}
+footer div:first-child{border-bottom:1px solid var(--line)}
+footer a{color:var(--muted);text-decoration:none}footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <a href="#" onclick="return false">Gmail</a>
+  <a href="#" onclick="return false">Εικόνες</a>
+  <a href="#" onclick="return false" class="signin">Σύνδεση</a>
+</header>
+<main>
+  <h1 class="logo" aria-label="Google"><span class="b">G</span><span class="r">o</span><span class="y">o</span><span class="b">g</span><span class="g">l</span><span class="r">e</span></h1>
+  <div class="box">
+    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    <input id="q" type="text" autocomplete="off" autofocus aria-label="Αναζήτηση" placeholder="">
+  </div>
+  <div class="btns">
+    <button id="go">Αναζήτηση Google</button>
+    <button id="lucky">Αισθάνομαι τυχερός/ή</button>
+  </div>
+</main>
+<footer>
+  <div>Ελλάδα</div>
+  <div><a href="#" onclick="return false">Σχετικά</a><a href="#" onclick="return false">Διαφήμιση</a><a href="#" onclick="return false">Απόρρητο</a><a href="#" onclick="return false">Όροι</a></div>
+</footer>
+<script>
+// Keyword → destination. Matching ignores case and Greek accents.
+const ROUTES = {
+  "ΠΑΠΙΑ": "https://one.com",
+  "ΧΗΝΑ": "https://two.com",
+  "ΚΥΚΝΟΣ": "https://three.com",
+  "ΠΕΡΙΣΤΕΡΙ": "https://four.com"
+};
+const norm = s => s.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/Σ/g, "Σ");
+
+function resolve(raw){
+  const k = norm(raw);
+  return ROUTES[k] || "https://www.google.com/search?q=" + encodeURIComponent(raw.trim());
+}
+function go(){
+  const raw = document.getElementById("q").value;
+  if(!raw.trim()) return;
+  const a = document.createElement("a");
+  a.href = resolve(raw);
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+document.getElementById("q").addEventListener("keydown", e => { if(e.key === "Enter") go(); });
+document.getElementById("go").addEventListener("click", go);
+document.getElementById("lucky").addEventListener("click", go);
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>Red Pill | CTF B1 2026</title></head>
+<body>
+  <p>provlima</p>
+  <input type="text" id="bar">
+  <button onclick="check()">Check</button>
+  <p id="msg"></p>
+
+  <script>
+    function check() {
+      if (document.getElementById("bar").value === "cat") {
+        window.location.href = "https://google.com";
+      } else {
+        document.getElementById("msg").textContent = "Wrong";
+      }
+    }
+  </script>
+
+  <p><a href="#" target="_blank">BOH8EIA</a></p>
+</body>
+</html>

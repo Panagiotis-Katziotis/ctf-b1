@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Class News — Receiver - CTF b1 2026</title>
+<style>
+  :root{
+    --bg: #f6f4ef;
+    --panel: #ffffff;
+    --line: #e1ddd3;
+    --ink: #1b1a17;
+    --ink-dim: #8c8779;
+    --accent: #215296;
+    --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    margin:0; height:100%; width:100%; overflow:hidden;
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+  }
+  #stage{
+    position:relative; height:100%; width:100%;
+    display:flex; flex-direction:column;
+    background-image: radial-gradient(circle at 50% 0%, rgba(33,82,150,0.07), transparent 60%);
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 22px 0; font-family:var(--mono); font-size:12px; color:var(--ink-dim);
+    letter-spacing:0.1em;
+  }
+  header .brand b{ color:var(--ink); }
+  .dot-row{ display:flex; align-items:center; gap:7px; }
+  .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--accent);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(33,82,150,0.45); }
+    70%{ box-shadow:0 0 0 6px rgba(33,82,150,0); }
+    100%{ box-shadow:0 0 0 0 rgba(33,82,150,0); }
+  }
+
+  #cardArea{
+    flex:1; display:flex; align-items:center; justify-content:center;
+    position:relative; padding:24px; user-select:none;
+  }
+  .navzone{
+    position:absolute; top:0; bottom:0; width:35%; z-index:5; cursor:pointer;
+  }
+  .navzone.left{ left:0; } .navzone.right{ right:0; }
+
+  .card{
+    width:100%; max-width:620px;
+    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    padding:40px 34px 30px;
+    position:absolute;
+    box-shadow:0 1px 2px rgba(20,18,12,0.04), 0 8px 24px rgba(20,18,12,0.05);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .card.enter{ opacity:0; transform:translateX(24px); }
+  .card.active{ opacity:1; transform:translateX(0); position:relative; }
+  .card.exit{ opacity:0; transform:translateX(-24px); }
+
+  .card-text{
+    font-size:clamp(20px, 3.4vw, 28px);
+    line-height:1.5; font-weight:400; white-space:pre-wrap; word-break:break-word;
+  }
+  .card-meta{
+    margin-top:22px; font-family:var(--mono); font-size:11px; color:var(--ink-dim);
+    letter-spacing:0.06em; display:flex; justify-content:space-between;
+  }
+
+  #segments{
+    display:flex; gap:4px; padding:0 22px; margin-top:2px;
+  }
+  .seg{
+    flex:1; height:2px; background:var(--line); border-radius:2px; overflow:hidden;
+  }
+  .seg i{ display:block; height:100%; width:0%; background:var(--ink-dim); }
+  .seg.done i{ width:100% !important; background:var(--ink-dim); }
+  .seg.active i{ background:var(--accent); transition:width linear; }
+
+  footer{
+    padding:14px 22px 22px; display:flex; justify-content:space-between;
+    font-family:var(--mono); font-size:11px; color:var(--ink-dim); letter-spacing:0.05em;
+  }
+
+  #empty{
+    display:none; text-align:center; font-family:var(--mono); color:var(--ink-dim); font-size:13px;
+  }
+  #empty .dot{ margin:0 auto 14px; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <header>
+    <div class="brand">Class News / <b>RECEIVER</b></div>
+    <div class="dot-row"><span class="dot"></span><span id="liveCount">connecting…</span></div>
+  </header>
+
+  <div id="cardArea">
+    <div class="navzone left" id="prevZone"></div>
+    <div class="navzone right" id="nextZone"></div>
+    <div id="cardHost"></div>
+    <div id="empty">
+      <div class="dot"></div>
+      NO TRANSMISSIONS YET
+    </div>
+  </div>
+
+  <div id="segments"></div>
+  <footer>
+    <span id="posIndicator">0 / 0</span>
+    <span>swipe or click to navigate</span>
+  </footer>
+</div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getFirestore, collection, query, orderBy, limit, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB74dZiLU5fpJch9f4hUilmW1mnkJ3tAwE",
+    authDomain: "ctf-b1-class-news.firebaseapp.com",
+    projectId: "ctf-b1-class-news",
+    storageBucket: "ctf-b1-class-news.firebasestorage.app",
+    messagingSenderId: "868128887123",
+    appId: "1:868128887123:web:cee6d32a1c7e7d06a4d1a6"
+  };
+  // -----------------------------------------------------------------------------
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const ROTATE_MS = 10000;
+  const MAX_SEGMENTS = 12; // if more posts than this, show counter only (no segment bar)
+
+  const cardHost = document.getElementById("cardHost");
+  const emptyEl = document.getElementById("empty");
+  const segWrap = document.getElementById("segments");
+  const posIndicator = document.getElementById("posIndicator");
+  const liveCount = document.getElementById("liveCount");
+
+  let posts = [];
+  let index = 0;
+  let timer = null;
+
+  function timeAgo(date){
+    if (!date) return "sending…";
+    const s = Math.max(1, Math.floor((Date.now() - date.getTime()) / 1000));
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  function buildSegments(){
+    segWrap.innerHTML = "";
+    if (posts.length === 0 || posts.length > MAX_SEGMENTS) {
+      segWrap.style.display = "none";
+      return;
+    }
+    segWrap.style.display = "flex";
+    posts.forEach(() => {
+      const seg = document.createElement("div");
+      seg.className = "seg";
+      seg.innerHTML = "<i></i>";
+      segWrap.appendChild(seg);
+    });
+  }
+
+  function renderCard(){
+    cardHost.innerHTML = "";
+    if (posts.length === 0) return;
+    const p = posts[index];
+    const card = document.createElement("div");
+    card.className = "card active";
+    card.innerHTML = `
+      <div class="card-text"></div>
+      <div class="card-meta">
+        <span>#${String(posts.length - index)}</span>
+        <span class="ts"></span>
+      </div>
+    `;
+    card.querySelector(".card-text").textContent = p.text;
+    card.querySelector(".ts").textContent = timeAgo(p.createdAt);
+    cardHost.appendChild(card);
+    posIndicator.textContent = `${index + 1} / ${posts.length}`;
+  }
+
+  // Keep the "Xs/Xm/Xh ago" label on the visible card fresh instead of
+  // freezing at whatever it said when the card was first rendered.
+  function tickTimestamp(){
+    if (posts.length === 0) return;
+    const tsEl = cardHost.querySelector(".ts");
+    if (tsEl) tsEl.textContent = timeAgo(posts[index].createdAt);
+  }
+  setInterval(tickTimestamp, 1000);
+
+  function runSegmentAnim(){
+    const segs = [...segWrap.children];
+    if (segs.length === 0) return;
+    segs.forEach((s, i) => {
+      s.classList.toggle("done", i < index);
+      s.classList.toggle("active", i === index);
+      const bar = s.querySelector("i");
+      bar.style.transition = "none";
+      bar.style.width = i < index ? "100%" : "0%";
+    });
+    const activeBar = segs[index]?.querySelector("i");
+    if (activeBar){
+      requestAnimationFrame(() => {
+        activeBar.style.transition = `width ${ROTATE_MS}ms linear`;
+        activeBar.style.width = "100%";
+      });
+    }
+  }
+
+  function goTo(newIndex){
+    if (posts.length === 0) return;
+    index = (newIndex + posts.length) % posts.length;
+    renderCard();
+    runSegmentAnim();
+    resetTimer();
+  }
+
+  function next(){ goTo(index + 1); }
+  function prev(){ goTo(index - 1); }
+
+  function resetTimer(){
+    clearTimeout(timer);
+    if (posts.length > 1) timer = setTimeout(next, ROTATE_MS);
+  }
+
+  function renderAll(){
+    const hasPosts = posts.length > 0;
+    emptyEl.style.display = hasPosts ? "none" : "block";
+    cardHost.style.display = hasPosts ? "block" : "none";
+    liveCount.textContent = hasPosts ? `${posts.length} live` : "listening";
+    buildSegments();
+    if (hasPosts){
+      index = Math.min(index, posts.length - 1);
+      renderCard();
+      runSegmentAnim();
+      resetTimer();
+    } else {
+      posIndicator.textContent = "0 / 0";
+      clearTimeout(timer);
+    }
+  }
+
+  // ---- realtime feed ----
+  const q = query(collection(db, "transmissions"), orderBy("createdAt", "desc"), limit(10));
+  onSnapshot(q, (snap) => {
+    posts = snap.docs.map(d => {
+      const data = d.data();
+      return { text: data.text, createdAt: data.createdAt ? data.createdAt.toDate() : null };
+    });
+    renderAll();
+  }, (err) => {
+    console.error(err);
+    liveCount.textContent = "connection error";
+  });
+
+  // ---- navigation: click zones, swipe, keyboard ----
+  document.getElementById("nextZone").addEventListener("click", next);
+  document.getElementById("prevZone").addEventListener("click", prev);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") next();
+    if (e.key === "ArrowLeft") prev();
+  });
+
+  let touchX = null;
+  document.getElementById("cardArea").addEventListener("touchstart", (e) => {
+    touchX = e.touches[0].clientX;
+  }, { passive: true });
+  document.getElementById("cardArea").addEventListener("touchend", (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 40) dx < 0 ? next() : prev();
+    touchX = null;
+  }, { passive: true });
+</script>
+
+</body>
+</html>

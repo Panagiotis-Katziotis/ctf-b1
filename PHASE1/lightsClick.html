@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Lights' Phase - 1 | CTF B1 2026</title>
+<style>
+:root{
+  --bg:#1a1410; --panel:#271d15; --edge:#4a3826; --text:#f0e4cf; --muted:#a8957a;
+  --off:#3a2c20; --on:#ff5a2a; --glow:rgba(255,90,42,.7); --target:#e8b64a; --ok:#6fcf8a; --bad:#e5484d;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark; } }
+:root[data-theme="dark"]{ color-scheme:dark; }
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;background:var(--bg);color:var(--text);
+  font-family:Georgia,"Times New Roman",serif;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  background-image:radial-gradient(ellipse at 50% 0%,#3a2a1b 0%,var(--bg) 60%);
+}
+main{width:100%;max-width:760px;text-align:center}
+h1{font-size:clamp(28px,6vw,46px);margin:0 0 8px;letter-spacing:.02em;font-weight:700}
+.sub{color:var(--muted);margin:0 auto 28px;max-width:46ch;line-height:1.5}
+.keys{display:flex;gap:10px;justify-content:center;margin-bottom:22px;font-size:28px}
+.key{filter:grayscale(1) brightness(.5);transition:filter .3s,transform .3s}
+.key.got{filter:none;transform:scale(1.15) rotate(-12deg)}
+.board{
+  padding:8px 0;
+}
+.row{display:grid;grid-template-columns:repeat(10,1fr);gap:clamp(4px,1.6vw,12px)}
+.slot{display:flex;flex-direction:column;align-items:center;gap:8px}
+.bulb{
+  width:100%;aspect-ratio:1;border-radius:50%;background:var(--off);
+  border:2px solid #000;transition:background .05s,box-shadow .05s;
+}
+.bulb.on{background:var(--on);box-shadow:0 0 18px 4px var(--glow)}
+.bulb.ok{background:var(--ok);box-shadow:0 0 18px 4px rgba(111,207,138,.7)}
+.bulb.bad{background:var(--bad);box-shadow:0 0 18px 4px rgba(229,72,77,.7)}
+.mark{height:10px;width:0;border-left:clamp(4px,1.2vw,8px) solid transparent;border-right:clamp(4px,1.2vw,8px) solid transparent;border-bottom:10px solid transparent}
+.slot.target .mark{border-bottom-color:var(--target)}
+.msg{min-height:1.6em;margin:22px 0 14px;font-size:18px}
+button,.go{
+  font:inherit;font-weight:700;font-size:20px;color:#1a1410;background:var(--target);
+  border:0;border-radius:10px;padding:14px 38px;cursor:pointer;text-decoration:none;display:inline-block;
+}
+button:active,.go:active{transform:translateY(2px)}
+button:focus-visible,.go:focus-visible{outline:3px solid var(--text);outline-offset:3px}
+.go{background:var(--ok);margin-top:6px}
+[hidden]{display:none!important}
+.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}.key{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="board" id="board">
+    <div class="row" id="row"></div>
+  </div>
+  <p class="msg" id="msg" aria-live="polite"></p>
+  <button id="btn">Start</button>
+  <a class="go" id="go" href="https://google.com" hidden>Complete! Go to next phase</a>
+</main>
+<script>
+(function(){
+  var N=10, NEED=6;
+  var speeds=[280,220,170,130,100,100]; // ms per step, faster each round
+  var row=document.getElementById('row'), msg=document.getElementById('msg'),
+      btn=document.getElementById('btn'), go=document.getElementById('go'),
+      board=document.getElementById('board');
+  var bulbs=[], slots=[];
+  for(var i=0;i<N;i++){
+    var s=document.createElement('div'); s.className='slot';
+    var b=document.createElement('div'); b.className='bulb';
+    var m=document.createElement('div'); m.className='mark';
+    s.appendChild(b); s.appendChild(m); row.appendChild(s);
+    bulbs.push(b); slots.push(s);
+  }
+  var pos=0, dir=1, timer=null, target=0, won=0, running=false;
+
+  function clearBulbs(){ bulbs.forEach(function(b){ b.className='bulb'; }); }
+  function setTarget(){
+    var t; do{ t=Math.floor(Math.random()*N); }while(t===target && won>0 && N>1);
+    target=t;
+    slots.forEach(function(s,i){ s.className='slot'+(i===target?' target':''); });
+  }
+  function step(){
+    clearBulbs();
+    bulbs[pos].classList.add('on');
+    if(pos+dir>=N||pos+dir<0) dir=-dir;
+    pos+=dir;
+  }
+  function startRound(){
+    clearInterval(timer);
+    setTarget();
+    pos=0; dir=1; running=true;
+    msg.textContent=(won+1)+' / '+NEED;
+    btn.textContent='Stop';
+    step();
+    timer=setInterval(step,speeds[Math.min(won,speeds.length-1)]);
+  }
+  function stop(){
+    if(!running) return;
+    running=false; clearInterval(timer);
+    // the light currently shown is the one before pos moved; recompute
+    var shown=pos-dir;
+    if(shown<0) shown=0; if(shown>=N) shown=N-1;
+    // handle edge reversal: if direction flipped at the edge, shown stays at edge
+    var lit=bulbs.findIndex(function(b){return b.classList.contains('on');});
+    if(lit>=0) shown=lit;
+    if(shown===target){
+      bulbs[shown].className='bulb ok';
+      won++;
+      if(won>=NEED){
+        msg.textContent='';
+        btn.hidden=true; go.hidden=false; go.focus();
+      }else{
+        msg.textContent=won+' / '+NEED;
+        btn.textContent='Next round';
+      }
+    }else{
+      bulbs[shown].className='bulb bad';
+      board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
+      won=0;
+      msg.textContent='Missed';
+      btn.textContent='Try again';
+    }
+  }
+  btn.addEventListener('click',function(){ running?stop():startRound(); });
+  document.addEventListener('keydown',function(e){
+    if(e.code==='Space' && !btn.hidden){ e.preventDefault(); running?stop():startRound(); }
+  });
+})();
+</script>
+</body>
+</html>

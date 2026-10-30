@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Blue Pill | CTF B1 2026</title></head>
+<body>
+    <p><img src="image.jpg" alt="Steganography" width="1200" height="700"></p>
+
+    <p>Find the hidden key
+    <input type="text" id="bar">
+    <button onclick="check()">Check</button></p>
+    <p id="msg"></p>
+
+    <script>
+        function check() {
+        if (document.getElementById("bar").value === "cat") {
+            window.location.href = "https://google.com";
+        } else {
+            document.getElementById("msg").textContent = "Wrong";
+        }
+        }
+    </script>
+
+    <p><a href="#" target="_blank">BOH8EIA</a></p>
+</body>
+</html>

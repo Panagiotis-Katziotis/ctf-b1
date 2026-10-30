@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Class News — Writer | CTF B1 2026</title>
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --panel: #131315;
+    --line: #232326;
+    --ink: #ece8e1;
+    --ink-dim: #8a8781;
+    --accent: #ff4b3e;
+    --accent-dim: #7a2620;
+    --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:var(--sans);
+  }
+  body{
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background-image: radial-gradient(circle at 50% 0%, rgba(255,75,62,0.06), transparent 60%);
+  }
+  .panel{
+    width:100%; max-width:560px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:28px 24px 20px;
+  }
+  .head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .brand{
+    font-family:var(--mono); font-size:13px; letter-spacing:0.14em;
+    color:var(--ink-dim);
+  }
+  .brand b{ color:var(--ink); font-weight:600; }
+  .dot-row{ display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:11px; color:var(--ink-dim); }
+  .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 0 0 rgba(255,75,62,0.55);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(255,75,62,0.45); }
+    70%{ box-shadow:0 0 0 6px rgba(255,75,62,0); }
+    100%{ box-shadow:0 0 0 0 rgba(255,75,62,0); }
+  }
+  textarea{
+    width:100%; min-height:160px; resize:vertical;
+    background:transparent; border:none; outline:none;
+    color:var(--ink); font-family:var(--sans); font-size:18px; line-height:1.55;
+    padding:0 0 16px; border-bottom:1px solid var(--line);
+  }
+  textarea::placeholder{ color:#4d4b48; }
+  .foot{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:16px;
+  }
+  .count{ font-family:var(--mono); font-size:12px; color:var(--ink-dim); }
+  .count.warn{ color:#e0a339; }
+  .count.over{ color:var(--accent); }
+  button{
+    font-family:var(--mono); font-size:12px; letter-spacing:0.08em;
+    background:var(--ink); color:#0a0a0b; border:none;
+    padding:11px 20px; border-radius:2px; cursor:pointer;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  button:disabled{ background:var(--line); color:var(--ink-dim); cursor:not-allowed; }
+  button:not(:disabled):active{ transform:scale(0.97); }
+  .status{
+    font-family:var(--mono); font-size:11px; color:var(--ink-dim);
+    margin-top:14px; min-height:14px; letter-spacing:0.04em;
+    opacity:0; transition:opacity .3s ease;
+  }
+  .status.show{ opacity:1; }
+  .status.ok{ color:#4ad991; }
+  .status.err{ color:var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="head">
+    <div class="brand">Class Chat <b>TRANSMITTER</b></div>
+    <!-- <div class="dot-row"><span class="dot"></span>READY</div> -->
+  </div>
+
+  <textarea id="text" placeholder="Γράψε την Ανακοίνωσή σου&hellip;" maxlength="2000"></textarea>
+
+  <div class="foot">
+    <div class="count" id="count">0 / 200 Λέξεις</div>
+    <button id="send" disabled>Δημοσίευση</button>
+  </div>
+
+  <div class="status" id="status"></div>
+</div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, serverTimestamp,
+    query, orderBy, getDocs, deleteDoc, limit
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB74dZiLU5fpJch9f4hUilmW1mnkJ3tAwE",
+    authDomain: "ctf-b1-class-news.firebaseapp.com",
+    projectId: "ctf-b1-class-news",
+    storageBucket: "ctf-b1-class-news.firebasestorage.app",
+    messagingSenderId: "868128887123",
+    appId: "1:868128887123:web:cee6d32a1c7e7d06a4d1a6"
+  };
+  // ----------------------------------------------------------------------------------------
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const postsRef = collection(db, "transmissions");
+
+  const textEl = document.getElementById("text");
+  const countEl = document.getElementById("count");
+  const sendBtn = document.getElementById("send");
+  const statusEl = document.getElementById("status");
+
+  const MAX_WORDS = 200;
+  const KEEP_LATEST = 10;
+
+  // deletes every post beyond the most recent KEEP_LATEST
+  async function pruneOldPosts(){
+    const q = query(postsRef, orderBy("createdAt", "desc"), limit(200));
+    const snap = await getDocs(q);
+    const overflow = snap.docs.slice(KEEP_LATEST);
+    await Promise.all(overflow.map(d => deleteDoc(d.ref)));
+  }
+
+  function wordCount(str){
+    const trimmed = str.trim();
+    return trimmed.length ? trimmed.split(/\s+/).length : 0;
+  }
+
+  function refresh(){
+    const n = wordCount(textEl.value);
+    countEl.textContent = `${n} / ${MAX_WORDS} Λέξεις`;
+    countEl.classList.toggle("warn", n > MAX_WORDS * 0.85 && n <= MAX_WORDS);
+    countEl.classList.toggle("over", n > MAX_WORDS);
+    sendBtn.disabled = n === 0 || n > MAX_WORDS;
+  }
+
+  textEl.addEventListener("input", refresh);
+
+  function showStatus(msg, cls){
+    statusEl.textContent = msg;
+    statusEl.className = `status show ${cls}`;
+    setTimeout(() => statusEl.classList.remove("show"), 2400);
+  }
+
+  sendBtn.addEventListener("click", async () => {
+    const text = textEl.value.trim();
+    if (!text || wordCount(text) > MAX_WORDS) return;
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = "SENDING…";
+    try {
+      await addDoc(postsRef, {
+        text,
+        createdAt: serverTimestamp()
+      });
+      await pruneOldPosts();
+      textEl.value = "";
+      refresh();
+      showStatus("TRANSMITTED", "ok");
+    } catch (err) {
+      console.error(err);
+      showStatus("TRANSMISSION FAILED — " + err.code, "err");
+    } finally {
+      sendBtn.textContent = "TRANSMIT";
+      refresh();
+    }
+  });
+
+  refresh();
+</script>
+
+</body>
+</html>

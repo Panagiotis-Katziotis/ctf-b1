@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Lights' Phase - 2 | CTF B1 2026</title>
+<style>
+:root{--bg:#f3f1ee;--fg:#1d1c1a;--mute:#6b6862;--off:#d9d5ce;--panel:#e8e4dd;--red:#e5383b;--green:#2fb36b;--blue:#2f6fed;--yellow:#f5b82e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15141a;--fg:#f1eee8;--mute:#9a96a0;--off:#2a2932;--panel:#1f1e26}}
+:root[data-theme="dark"]{--bg:#15141a;--fg:#f1eee8;--mute:#9a96a0;--off:#2a2932;--panel:#1f1e26}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:"Trebuchet MS",Verdana,sans-serif;display:flex;justify-content:center}
+main{width:100%;max-width:520px;padding:28px 18px 40px;text-align:center}
+h1{font-size:2rem;margin:0 0 6px;letter-spacing:.02em}
+#msg{min-height:3.2em;color:var(--mute);margin:0 0 18px;line-height:1.5}
+#board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;background:var(--panel);padding:18px;border-radius:22px}
+.light{aspect-ratio:1;border-radius:50%;border:0;background:var(--off);color:var(--mute);font:600 1rem inherit;font-family:inherit;cursor:default;transition:background .15s,box-shadow .15s,transform .15s}
+.light.lit{transform:scale(1.08)}
+.light.pick{cursor:pointer}
+.light:focus-visible,.btn:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+.red{background:var(--red);box-shadow:0 0 24px var(--red);color:#fff}
+.green{background:var(--green);box-shadow:0 0 24px var(--green);color:#fff}
+.blue{background:var(--blue);box-shadow:0 0 24px var(--blue);color:#fff}
+.yellow{background:var(--yellow);box-shadow:0 0 24px var(--yellow);color:#222}
+.ok{outline:3px solid var(--green);outline-offset:2px}
+.bad{outline:3px solid var(--red);outline-offset:2px}
+#bar{height:6px;background:var(--panel);border-radius:3px;margin:18px 0;overflow:hidden}
+#fill{height:100%;width:0;background:var(--fg)}
+.btn{display:inline-block;margin:6px;padding:14px 26px;border:0;border-radius:999px;background:var(--fg);color:var(--bg);font:700 1rem inherit;font-family:inherit;text-decoration:none;cursor:pointer}
+.btn[hidden]{display:none}
+.btn.win{background:var(--green);color:#fff}
+@media (prefers-reduced-motion:reduce){.light{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1></h1>
+<p id="msg"></p>
+<p id="msg">Δέκα φώτα θα ανάβουν ένα ένα, για δύο δευτερόλεπτα το καθένα. Θυμήσου κάθε χρώμα.</p>
+<div id="board" aria-label="Ten lights"></div>
+<div id="bar"><div id="fill"></div></div>
+<button class="btn" id="start">Start</button>
+<button class="btn" id="check" hidden>Check</button>
+<a class="btn win" id="prize" href="https://google.com" target="_blank" rel="noopener" hidden>Complete! Go to next phase</a>
+</main>
+<script>
+const COLORS=["red","green","blue","yellow"];
+const board=document.getElementById("board"),msg=document.getElementById("msg"),fill=document.getElementById("fill");
+const startBtn=document.getElementById("start"),checkBtn=document.getElementById("check"),prize=document.getElementById("prize");
+let seq=[],guess=[],phase="idle",timers=[];
+const lights=[];
+for(let i=0;i<10;i++){
+  const b=document.createElement("button");
+  b.className="light";b.textContent=i+1;b.setAttribute("aria-label","Light "+(i+1));
+  b.addEventListener("click",()=>{
+    if(phase!=="recall")return;
+    guess[i]=guess[i]==null?0:(guess[i]+1)%4;
+    paint(i,COLORS[guess[i]]);
+    checkBtn.disabled=guess.some(g=>g==null);
+  });
+  board.appendChild(b);lights.push(b);
+}
+function paint(i,c){lights[i].className="light"+(phase==="recall"?" pick":"")+(c?" "+c:"");}
+function reset(){lights.forEach((_,i)=>paint(i,null));}
+function clearTimers(){timers.forEach(clearTimeout);timers=[];}
+function start(){
+  clearTimers();
+  seq=Array.from({length:10},()=>Math.floor(Math.random()*4));
+  guess=Array(10).fill(null);
+  phase="show";reset();
+  startBtn.hidden=true;checkBtn.hidden=true;prize.hidden=true;
+  fill.style.transition="none";fill.style.width="0";
+  msg.textContent="Watch closely…";
+  const step=2400;
+  seq.forEach((c,i)=>{
+    timers.push(setTimeout(()=>{
+      reset();paint(i,COLORS[c]);lights[i].classList.add("lit");
+      msg.textContent="Light "+(i+1)+" of 10";
+      fill.style.transition="width .3s";fill.style.width=((i+1)*10)+"%";
+    },600+i*step));
+    timers.push(setTimeout(()=>paint(i,null),600+i*step+2000));
+  });
+  timers.push(setTimeout(()=>{
+    phase="recall";reset();
+    lights.forEach(l=>l.classList.add("pick"));
+    msg.textContent="Tap each light to set its colour (red, green, blue, yellow), then check.";
+    checkBtn.hidden=false;checkBtn.disabled=true;
+  },600+10*step));
+}
+function check(){
+  phase="done";
+  let right=0;
+  lights.forEach((l,i)=>{
+    const good=guess[i]===seq[i];
+    if(good)right++;
+    paint(i,COLORS[seq[i]]);
+    l.classList.add(good?"ok":"bad");
+  });
+  checkBtn.hidden=true;startBtn.hidden=false;
+  if(right===10){
+    msg.textContent="Perfect memory! 10 out of 10.";
+    prize.hidden=false;startBtn.textContent="Play again";
+  }else{
+    msg.textContent=right+" out of 10 correct. The real colours are shown. Get all 10 to win.";
+    startBtn.textContent="Try again";
+  }
+}
+startBtn.addEventListener("click",start);
+checkBtn.addEventListener("click",check);
+</script>
+</body>
+</html>

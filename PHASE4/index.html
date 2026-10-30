@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radio | CTF B1 2026</title>
+<style>
+  :root {
+    --brass-top: #8a7a5c;
+    --brass-mid: #a8956c;
+    --brass-low: #bfa974;
+    --glow: #e6d27a;
+    --wood-1: #4a2418;
+    --wood-2: #2f150d;
+    --wood-3: #5c3022;
+    --chrome-hi: #f2f2f2;
+    --chrome-lo: #2a2a2a;
+    --dot: #f2c7b8;
+    --label: #e9e4dc;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #1a0d08;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Optima", "Candara", "Trebuchet MS", sans-serif;
+    -webkit-user-select: none; user-select: none;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  }
+  .unit {
+    width: min(100vw, 420px);
+    height: min(100vh, 680px);
+    height: min(100dvh, 680px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    overflow: hidden;
+    position: relative;
+  }
+  /* brushed brass / cloth panel */
+  .panel {
+    flex: 1 1 62%;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(255,240,170,.35), transparent 45%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, rgba(0,0,0,.02) 1px 2px),
+      linear-gradient(180deg, var(--brass-top) 0%, var(--brass-mid) 55%, var(--brass-low) 100%);
+    position: relative;
+    box-shadow: inset 0 -6px 14px rgba(0,0,0,.25);
+  }
+  .panel::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, #7c6d4c, var(--glow) 50%, #7c6d4c);
+    box-shadow: 0 -2px 14px rgba(230,210,122,.65);
+  }
+  .now {
+    position: absolute; inset: auto 0 22px 0;
+    text-align: center;
+    color: rgba(40,25,5,.75);
+    font-size: 15px;
+    letter-spacing: .04em;
+    text-shadow: 0 1px 0 rgba(255,255,255,.3);
+    min-height: 1.4em;
+  }
+  /* wood */
+  .wood {
+    flex: 1 1 38%;
+    position: relative;
+    background:
+      repeating-linear-gradient(92deg, rgba(0,0,0,.18) 0 2px, transparent 2px 7px, rgba(255,200,150,.05) 7px 9px, transparent 9px 17px),
+      repeating-linear-gradient(88deg, rgba(0,0,0,.12) 0 1px, transparent 1px 11px),
+      linear-gradient(180deg, var(--wood-3), var(--wood-1) 40%, var(--wood-2));
+    display: flex; justify-content: center; align-items: center;
+  }
+  .dial {
+    position: relative;
+    width: 220px; height: 220px;
+    touch-action: none;
+  }
+  .tick {
+    position: absolute; left: 50%; top: 50%;
+    width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: var(--dot);
+    opacity: .55;
+    box-shadow: 0 0 4px rgba(255,200,180,.5);
+    transition: opacity .15s, box-shadow .15s;
+  }
+  .tick.on { opacity: 1; box-shadow: 0 0 10px 2px rgba(255,220,200,.9); }
+  .tick-label {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px; color: var(--label); opacity: .75;
+  }
+  .knob {
+    position: absolute; left: 50%; top: 50%;
+    width: 112px; height: 112px; margin: -56px 0 0 -56px;
+    border-radius: 50%;
+    cursor: grab;
+    background:
+      conic-gradient(from 0deg, #1b1b1b, #6b6b6b 12%, #1b1b1b 25%, #8a8a8a 37%, #1b1b1b 50%, #6b6b6b 62%, #1b1b1b 75%, #8a8a8a 87%, #1b1b1b);
+    box-shadow: 0 8px 18px rgba(0,0,0,.75), 0 0 0 2px #0c0c0c, inset 0 0 0 1px rgba(255,255,255,.25);
+    transition: transform .22s cubic-bezier(.3,1.4,.5,1);
+  }
+  .knob:active { cursor: grabbing; }
+  .knob.drag { transition: none; }
+  .knob:focus-visible { outline: 3px solid var(--glow); outline-offset: 6px; }
+  .face {
+    position: absolute; inset: 10px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #000 0 8%, transparent 9%),
+      repeating-conic-gradient(from 0deg, #0a0a0a 0 6deg, #1c1c1c 6deg 12deg);
+    box-shadow: inset 0 0 12px #000, 0 0 0 2px rgba(220,220,220,.7);
+  }
+  .face::before { /* chrome sheen */
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,.35), transparent 45%, rgba(255,255,255,.08));
+  }
+  .face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .face text {
+    fill: var(--chrome-hi);
+    font: 600 11px "Optima","Candara","Trebuchet MS",sans-serif;
+    letter-spacing: .14em;
+  }
+  .pointer {
+    position: absolute; left: 50%; top: 2px;
+    width: 14px; height: 22px; margin-left: -7px;
+    background: linear-gradient(180deg, #fff, #bdbdbd);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.6));
+    top: -14px;
+    transform: rotate(0deg);
+  }
+  .tap {
+    position: absolute; inset: 0; display: none;
+    background: rgba(26,13,8,.82);
+    color: var(--label); text-align: center;
+    align-items: center; justify-content: center;
+    font-size: 15px; letter-spacing: .03em; z-index: 5; cursor: pointer;
+  }
+  .tap.show { display: flex; }
+  @media (prefers-reduced-motion: reduce) { .knob { transition: none; } }
+</style>
+</head>
+<body>
+<main class="unit">
+  <section class="panel" aria-live="polite">
+    <div class="now" id="now">Turn the knob to play</div>
+  </section>
+  <section class="wood">
+    <div class="dial" id="dial">
+      <div class="knob" id="knob" role="slider" tabindex="0"
+           aria-label="Effects volume" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-valuetext="Off">
+        <div class="pointer"></div>
+        <div class="face">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <defs>
+              <path id="top" d="M 20 50 A 30 30 0 0 1 80 50"/>
+              <path id="bot" d="M 16 50 A 34 34 0 0 0 84 50"/>
+            </defs>
+            <text text-anchor="middle"><textPath href="#top" startOffset="50%">EFFECTS</textPath></text>
+            <text text-anchor="middle"><textPath href="#bot" startOffset="50%">VOL</textPath></text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="tap" id="tap">Tap to enable sound</div>
+</main>
+
+<script>
+(function () {
+  // Knob positions: 0 = off, 1-4 = tracks. Angles are degrees from straight up.
+  var ANGLES = [-120, -60, 0, 60, 120];     // rest, 1, 2, 3, 4
+  var TRACKS = [null, "track01.m4a", "track02.m4a", "track03.m4a", "track04.m4a"];
+  var LABELS = ["Off", "Track 1", "Track 2", "Track 3", "Track 4"];
+
+  var dial = document.getElementById("dial");
+  var knob = document.getElementById("knob");
+  var now = document.getElementById("now");
+  var tap = document.getElementById("tap");
+  var RADIUS = 100;
+  var ticks = [];
+
+  ANGLES.forEach(function (a, i) {
+    var r = a * Math.PI / 180;
+    var t = document.createElement("div");
+    t.className = "tick";
+    t.style.transform = "translate(" + (Math.sin(r) * RADIUS) + "px," + (-Math.cos(r) * RADIUS) + "px)";
+    dial.appendChild(t);
+    ticks.push(t);
+    if (i > 0) {
+      var l = document.createElement("div");
+      l.className = "tick-label";
+      l.textContent = i;
+      l.style.transform = "translate(calc(-50% + " + (Math.sin(r) * (RADIUS + 20)) + "px), calc(-50% + " + (-Math.cos(r) * (RADIUS + 20)) + "px))";
+      dial.appendChild(l);
+    }
+  });
+
+  var audio = new Audio();
+  audio.loop = true;
+  audio.preload = "auto";
+
+  var current = 0;
+  var wantPlay = false;
+
+  function play() {
+    var p = audio.play();
+    if (p && p.catch) p.catch(function (err) {
+      if (err && err.name === "NotAllowedError") {
+        tap.classList.add("show");          // blocked until a tap
+      } else if (err && err.name !== "AbortError") {
+        showMissing();                       // file missing or unsupported
+      }
+    });
+  }
+
+  function showMissing() {
+    if (TRACKS[current]) now.textContent = "Can\u2019t load " + TRACKS[current] + ". Check it is in the same folder as this page.";
+  }
+  audio.addEventListener("error", showMissing);
+  function setPosition(i, instant) {
+    if (i === current && !instant) return;
+    current = i;
+    knob.style.transform = "rotate(" + ANGLES[i] + "deg)";
+    ticks.forEach(function (t, k) { t.classList.toggle("on", k === i); });
+    knob.setAttribute("aria-valuenow", i);
+    knob.setAttribute("aria-valuetext", LABELS[i]);
+    if (TRACKS[i]) {
+      audio.src = TRACKS[i];
+      now.textContent = LABELS[i] + " · " + TRACKS[i];
+      wantPlay = true;
+      play();
+    } else {
+      wantPlay = false;
+      audio.pause();
+      now.textContent = "Turn the knob to play";
+    }
+  }
+
+  function nearest(angle) {
+    var best = 0, d = 1e9;
+    ANGLES.forEach(function (a, i) {
+      var diff = Math.abs(a - angle);
+      if (diff < d) { d = diff; best = i; }
+    });
+    return best;
+  }
+
+  function pointerAngle(e) {
+    var r = dial.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var a = Math.atan2(e.clientX - cx, -(e.clientY - cy)) * 180 / Math.PI;
+    return Math.max(-120, Math.min(120, a));
+  }
+
+  var dragging = false;
+  knob.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    knob.classList.add("drag");
+    knob.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  knob.addEventListener("pointermove", function (e) {
+    if (!dragging) return;
+    var a = pointerAngle(e);
+    knob.style.transform = "rotate(" + a + "deg)";
+    var i = nearest(a);
+    if (i !== current) {
+      current = -1; // force update
+      setPosition(i);
+    }
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    knob.classList.remove("drag");
+    knob.style.transform = "rotate(" + ANGLES[current] + "deg)"; // snap to detent
+  }
+  knob.addEventListener("pointerup", endDrag);
+  knob.addEventListener("pointercancel", endDrag);
+
+  // Click anywhere on the dial ring to jump to a position
+  knob.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") { setPosition(Math.min(4, current + 1)); e.preventDefault(); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { setPosition(Math.max(0, current - 1)); e.preventDefault(); }
+  });
+
+  tap.addEventListener("click", function () {
+    tap.classList.remove("show");
+    if (wantPlay) play();
+  });
+
+  // Releasing the knob is a real gesture (touch counts only on release), so retry playback then
+  knob.addEventListener("pointerup", function () {
+    if (wantPlay && audio.paused) { tap.classList.remove("show"); play(); }
+  });
+
+  setPosition(0, true);
+
+  // Open image.png in a new tab on load. Browsers usually block popups without a gesture,
+  // so if it is blocked, open it on the first tap or key press instead.
+  function openImage() {
+    var w = null;
+    try { w = window.open("image.png", "_blank"); } catch (e) {}
+    return !!w;
+  }
+  function openOnFirstGesture() {
+    function once() {
+      document.removeEventListener("pointerup", once, true);
+      document.removeEventListener("keydown", once, true);
+      openImage();
+    }
+    document.addEventListener("pointerup", once, true);
+    document.addEventListener("keydown", once, true);
+  }
+  window.addEventListener("load", function () {
+    if (!openImage()) openOnFirstGesture();
+  });
+})();
+</script>
+</body>
+</html>

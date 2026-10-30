@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CTF B1 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--fg:#fff;--dim:#a8a8a8;--lime:#c4ff0e;--dot:#2200ff;--line:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#fff;--fg:#000;--dim:#444;--dot:#2200ff;--line:#000}}
+:root[data-theme="dark"]{--bg:#000;--fg:#fff;--dim:#a8a8a8;--dot:#2200ff;--line:#fff}
+:root[data-theme="light"]{--bg:#fff;--fg:#000;--dim:#444;--dot:#2200ff;--line:#000}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Space Mono",ui-monospace,Menlo,Consolas,monospace;text-align:center;overflow-x:hidden}
+.tick{background:var(--lime);color:#000;font-weight:700;font-size:12px;letter-spacing:.15em;text-transform:uppercase;padding:6px 0;overflow:hidden;white-space:nowrap}
+.tick span{display:inline-block;padding-left:100%;animation:t 30s linear infinite}
+@keyframes t{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.tick span{animation:none;padding-left:0}}
+
+/* dotted field */
+.field{position:relative;background-color:#000;
+background-image:
+radial-gradient(circle,var(--dot) 2.2px,transparent 2.6px),
+radial-gradient(circle,var(--dot) 1.4px,transparent 1.8px),
+radial-gradient(circle,rgba(34,0,255,.45) 1px,transparent 1.4px);
+background-size:23px 23px,17px 17px,11px 11px;
+background-position:0 0,7px 9px,3px 5px}
+
+/* staircase of lime triangles */
+.stairs{display:grid;gap:3px;width:min(46vw,300px);position:absolute;top:0;left:0}
+.stairs i{display:block;aspect-ratio:1;background:var(--lime);clip-path:polygon(0 0,100% 100%,0 100%)}
+.stairs i.e{background:none}
+.field.top{height:min(52vw,330px)}
+.field.top .stairs{top:auto;bottom:0}
+.field.bot{height:min(52vw,330px)}
+.field.bot .stairs{top:0;left:auto;right:0;transform:rotate(180deg)}
+
+.saw{height:28px;background:linear-gradient(to top left,transparent 49%,var(--lime) 50%) 0 0/28px 28px repeat-x}
+.saw.r{transform:scaleX(-1)}
+
+main{max-width:820px;margin:0 auto;padding:0 22px}
+.tag{display:inline-block;border:2px solid var(--lime);color:var(--lime);padding:2px 10px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.hero{padding:64px 0 56px}
+h1{font:400 clamp(44px,12.5vw,112px)/.92 "Archivo Black",Impact,"Arial Black",sans-serif;text-transform:uppercase;margin:22px 0 0;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--lime)}
+h2{font:400 clamp(22px,5vw,34px)/1.1 "Archivo Black",Impact,"Arial Black",sans-serif;text-transform:uppercase;margin:0 0 20px}
+section{padding:52px 0}
+p{max-width:54ch;margin:18px auto 0}
+.dim{color:var(--dim);font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.rule{height:3px;background:var(--lime);max-width:120px;margin:0 auto 24px}
+footer{padding:12px 0 40px}
+a{color:var(--lime);font-weight:700}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) a,:root:not([data-theme="dark"]) h1 em{color:#000;text-decoration-color:var(--lime);text-decoration-thickness:4px}}
+</style>
+</head>
+<body>
+<div class="tick"><span>/// Capture The Flag /// ATHENS, GR /// Β1 ΠΓΕΣΣ /// 2026 /// OPEN FOR ALL /// ΑΠΟ ΤΟ ΠΕΝΤΑΜΕΛΕΣ ΤΟΥ Β1 (2026-2027) ///&nbsp;</span></div>
+
+<div class="field top"><div class="stairs" data-n="3"></div></div>
+
+<main>
+  <div class="hero">
+    <span class="tag">2026</span>
+    <h1><em>CTF</em><br>B1<br></h1>
+    <p>Ένας διαγωνισμός για τους μαθητές του B1</p>
+  </div>
+</main>
+
+<div class="saw" aria-hidden="true"></div>
+
+<main>
+  <section>
+    <div class="rule"></div>
+    <h2>Τι ειναι ενα CTF;</h2>
+    <p>Ένα CTF (Capture The Flag) είναι ένας διαγωνισμός στον οποίο οι συμμετέχοντες καλούνται να λύσουν γρίφους και προβλήματα, χρησιμοποιώντας τη λογική, τη δημιουργικότητα και τις γνώσεις τους στην τεχνολογία, με στόχο να ανακαλύψουν κρυμμένα στοιχεία που θα τους οδηγήσουν στη λύση.</p>
+  </section>
+
+  <section>
+    <div class="rule"></div>
+    <h2>Θελετε να συμμετασχετε;</h2>
+    <p>Αν θέλετε να συμμετάσχετε στον διαγωνισμό, στείλτε ένα email στην διεύθυνση <a href="mailto:kwyehkeal@mozmail.com">kwyehkeal@mozmail.com</a>, για να σας σταλεί ο σύνδεσμος του διαγωνισμού. Ο διαγωνισμός ξεκινά στις 6/11/2026.</p>
+  </section>
+
+  <section>
+    <div class="rule"></div>
+    <h2>Τι θα χρειαστειτε;</h2>
+    <p>Θα χρειαστείτε να έχετε έναν υπολογιστή (ή ένα κινητό, αλλά θα είναι λίγο πιο δύσκολο λόγω της μικρής οθόνης) με πρόσβαση στο διαδίκτυο και ήχο,</p>
+    <p>Επίσης, πιθανώς θα χρειαστείτε τις παρακάτω ιστοσελίδες: <a href="#">Google</a> και <a href="https://stylesuxx.github.io/steganography/">Steganography Tool</a>, επίσης να γνωρίζετε πως Ctrl+Shift+I = Developer Tools.</p>
+  </section>
+
+  <section>
+    <div class="rule"></div>
+    <h2>Ποιος ειναι ο στοχος αυτου του ctf</h2>
+    <p>Ο στόχος αυτού του CTF, εν συντομία, είναι να μπορέσετε να γράψετε μία ανακοίνωση στην ιστοσελίδα της τάξης και στην διαδρομή αυτή να εξασκήσετε τις δεξιότητές σας.</p>
+    <p>Αυτό το CTF δεν είναι σαν τα συνηθισμένα Cybersecurity CTFs καθώς συνδιάζει τη λογική και τις γνώσεις στην τεχνολογία με έναν πιο παιχνιδιάρικο τρόπο.</p>
+   
+  </section>
+
+  <section>
+    <div class="rule"></div>
+    <h2>Σημειωμα</h2>
+    <p>Γεια σας, είμαι ο Παναγιώτης και είμαι αυτός που δημιούργησα αυτόν τον διαγωνισμό με πρωτοβουλιά του Πενταμελούς του Β1. Ελπίζω να σας αρέσει και να σας κάνει να σκεφτείτε.</p>
+    <p>Ως δημιουργός, έχω να πω ευχαριστώ στον Stobak για την ζωγραφία του, τη οποία χρησιμοποιήσα.</p>
+    <p>Illustrations used in this project: <a href="https://www.newgrounds.com/art/view/99bananas/graffiti-grind">Graffiti Grind</a> & <a href="https://www.newgrounds.com/art/view/pkatz/euangelike-schole-b1-graffiti-logo">Ευαγγελική Σχολή Β1 - Graffiti logo</a></p>
+  </section>
+</main>
+
+<div class="saw r" aria-hidden="true"></div>
+<div class="field bot"><div class="stairs" data-n="3"></div></div>
+
+<main>
+  <footer><div class="dim"><a href="https://panagiotis-katziotis.github.io">Παναγιωτης Κατζιωτης</a> (Μελος του Πενταμελους του Β1) — Καλλιθεα, Αθηνα, Ελλαδα - 2026</div></footer>
+</main>
+
+<script>
+document.querySelectorAll('.stairs').forEach(function(el){
+var n=+el.dataset.n;el.style.gridTemplateColumns='repeat('+n+',1fr)';
+for(var r=0;r<n;r++)for(var c=0;c<n;c++){var i=document.createElement('i');if(c>r)i.className='e';el.appendChild(i)}
+});
+</script>
+</body>
+</html>
