@@ -53,12 +53,12 @@ footer a{color:var(--muted);text-decoration:none}footer a:hover{text-decoration:
   <div><a href="#" onclick="return false">Σχετικά</a><a href="#" onclick="return false">Διαφήμιση</a><a href="#" onclick="return false">Απόρρητο</a><a href="#" onclick="return false">Όροι</a></div>
 </footer>
 <script>
-// Keyword → destination. Matching ignores case and Greek accents.
+// Keywords
 const ROUTES = {
-  "ΠΑΠΙΑ": "https://one.com",
-  "ΧΗΝΑ": "https://two.com",
-  "ΚΥΚΝΟΣ": "https://three.com",
-  "ΠΕΡΙΣΤΕΡΙ": "https://four.com"
+  "ΠΑΠΙΑ": "https://panagiotis-katziotis.github.io/ctf-b1/class-website/class-news/transmitter.html",
+  "ΧΗΝΑ": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "ΚΥΚΝΟΣ": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "ΠΕΡΙΣΤΕΡΙ": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 };
 const norm = s => s.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/Σ/g, "Σ");
 
