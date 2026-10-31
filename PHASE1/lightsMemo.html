@@ -53,7 +53,7 @@ let seq=[],guess=[],phase="idle",timers=[];
 const lights=[];
 for(let i=0;i<10;i++){
   const b=document.createElement("button");
-  b.className="light";b.textContent=i+1;b.setAttribute("aria-label","Light "+(i+1));
+  b.className="light";b.textContent=i+1;b.setAttribute("aria-label","Κύκλος "+(i+1));
   b.addEventListener("click",()=>{
     if(phase!=="recall")return;
     guess[i]=guess[i]==null?0:(guess[i]+1)%4;
@@ -72,12 +72,12 @@ function start(){
   phase="show";reset();
   startBtn.hidden=true;checkBtn.hidden=true;prize.hidden=true;
   fill.style.transition="none";fill.style.width="0";
-  msg.textContent="Watch closely…";
+  msg.textContent="Πρόσεξε...";
   const step=2400;
   seq.forEach((c,i)=>{
     timers.push(setTimeout(()=>{
       reset();paint(i,COLORS[c]);lights[i].classList.add("lit");
-      msg.textContent="Light "+(i+1)+" of 10";
+      msg.textContent="Κύκλος "+(i+1)+" / 10";
       fill.style.transition="width .3s";fill.style.width=((i+1)*10)+"%";
     },600+i*step));
     timers.push(setTimeout(()=>paint(i,null),600+i*step+2000));
@@ -85,7 +85,7 @@ function start(){
   timers.push(setTimeout(()=>{
     phase="recall";reset();
     lights.forEach(l=>l.classList.add("pick"));
-    msg.textContent="Tap each light to set its colour (red, green, blue, yellow), then check.";
+    msg.textContent="Πάτα όσες φορές χρείζεται σε κάθε κύκλο για να ορίσεις το χρώμα, αφού τελείωσεις πάτα το Check.";
     checkBtn.hidden=false;checkBtn.disabled=true;
   },600+10*step));
 }
@@ -100,11 +100,11 @@ function check(){
   });
   checkBtn.hidden=true;startBtn.hidden=false;
   if(right===10){
-    msg.textContent="Perfect memory! 10 out of 10.";
-    prize.hidden=false;startBtn.textContent="Play again";
+    msg.textContent="10 / 10";
+    prize.hidden=false;startBtn.textContent="Δεν θες να ξαναπαίξεις;";
   }else{
-    msg.textContent=right+" out of 10 correct. The real colours are shown. Get all 10 to win.";
-    startBtn.textContent="Try again";
+    msg.textContent=right+" / 10 Σωστά. Τα σωστά χρώματα φαίνονται τώρα.";
+    startBtn.textContent="Ξαναπροσπάθησε";
   }
 }
 startBtn.addEventListener("click",start);
