@@ -301,24 +301,32 @@
 
   setPosition(0, true);
 
-  // Open image.png in a new tab on load. Browsers usually block popups without a gesture,
-  // so if it is blocked, open it on the first tap or key press instead.
-  function openImage() {
-    var w = null;
-    try { w = window.open("image.png", "_blank"); } catch (e) {}
-    return !!w;
+  // Open image.png and google.com in new tabs on load. Browsers usually block popups
+  // without a gesture, so any tab that gets blocked is opened on the first tap or key press instead.
+  var URLS = ["image.png", "https://panagiotis-katziotis.github.io/ctf-b1/google.html"];
+  var opened = URLS.map(function () { return false; });
+
+  function openPending() {
+    URLS.forEach(function (url, i) {
+      if (opened[i]) return;
+      var w = null;
+      try { w = window.open(url, "_blank"); } catch (e) {}
+      opened[i] = !!w;
+    });
+    return opened.every(Boolean);
   }
   function openOnFirstGesture() {
     function once() {
-      document.removeEventListener("pointerup", once, true);
-      document.removeEventListener("keydown", once, true);
-      openImage();
+      if (openPending()) {
+        document.removeEventListener("pointerup", once, true);
+        document.removeEventListener("keydown", once, true);
+      }
     }
     document.addEventListener("pointerup", once, true);
     document.addEventListener("keydown", once, true);
   }
   window.addEventListener("load", function () {
-    if (!openImage()) openOnFirstGesture();
+    if (!openPending()) openOnFirstGesture();
   });
 })();
 </script>
